@@ -6,6 +6,9 @@ from sklearn import metrics
 from sklearn.metrics import roc_auc_score
 from sklearn.ensemble import RandomForestClassifier
 
+from cProfile import label
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
@@ -26,12 +29,13 @@ def missing_summary(df: pd.DataFrame) -> pd.DataFrame:
         - Data type of each column
     """
     total = df.isnull().sum()
-    percent = (df.isnull().sum() / df.isnull().count() * 100)
-    
+    percent = df.isnull().sum() / df.isnull().count() * 100
+
     tt = pd.concat([total, percent], axis=1, keys=["Total", "Percent"])
     tt["Types"] = [str(df[col].dtype) for col in df.columns]
-    
+
     return tt.T  # Transpose for readability
+
 
 def family(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -65,6 +69,7 @@ def frequency_summary(df: pd.DataFrame) -> pd.DataFrame:
     tt["Percent from total"] = np.round(tt["Frequency"] / tt["Total"] * 100, 3)
     return tt.T
 
+
 def unique_summary(df: pd.DataFrame) -> pd.DataFrame:
     """
     Summarise non-missing and unique value counts for each column.
@@ -74,6 +79,7 @@ def unique_summary(df: pd.DataFrame) -> pd.DataFrame:
     tt["Uniques"] = [df[col].nunique() for col in df.columns]
     return tt.T
 
+
 def combine_train_test(train_df: pd.DataFrame, test_df: pd.DataFrame) -> pd.DataFrame:
     """
     Combine train and test DataFrames and label their source in a new 'set' column.
@@ -82,6 +88,7 @@ def combine_train_test(train_df: pd.DataFrame, test_df: pd.DataFrame) -> pd.Data
     all_df["set"] = "train"
     all_df.loc[all_df["Survived"].isna(), "set"] = "test"
     return all_df
+
 
 def family_add(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -110,7 +117,6 @@ def add_intervals(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-
 def add_sex_pclass(df: pd.DataFrame) -> pd.DataFrame:
     """
     Add 'Sex_Pclass' column combining the first letter of 'Sex' and 'Pclass'.
@@ -119,8 +125,7 @@ def add_sex_pclass(df: pd.DataFrame) -> pd.DataFrame:
     """
     df = df.copy()
     df["Sex_Pclass"] = df.apply(
-        lambda row: row["Sex"][0].upper() + "_C" + str(row["Pclass"]),
-        axis=1
+        lambda row: row["Sex"][0].upper() + "_C" + str(row["Pclass"]), axis=1
     )
     return df
 
@@ -144,7 +149,6 @@ def parse_names(row):
             return pd.Series([family_name, title, given_name, None])
     except Exception as ex:
         print(f"Exception: {ex}")
-
 
 
 def add_name_parts(df: pd.DataFrame) -> pd.DataFrame:
@@ -181,13 +185,23 @@ def add_family_and_title_features(df: pd.DataFrame) -> pd.DataFrame:
     )
     df["Titles"] = df["Titles"].replace(
         [
-            "Lady.", "the Countess.", "Capt.", "Col.", "Don.", "Dr.", "Major.",
-            "Rev.", "Sir.", "Jonkheer.", "Dona."
+            "Lady.",
+            "the Countess.",
+            "Capt.",
+            "Col.",
+            "Don.",
+            "Dr.",
+            "Major.",
+            "Rev.",
+            "Sir.",
+            "Jonkheer.",
+            "Dona.",
         ],
-        "Rare"
+        "Rare",
     )
 
     return df
+
 
 def encode_sex(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -211,10 +225,11 @@ def get_target(df: pd.DataFrame, target: str) -> np.ndarray:
     """
     return df[target].values
 
+
 def train_and_predict_rf(train_X, train_Y, valid_X=None):
-    '''
+    """
     Train a Random Forest classifier and make predictions.
-    '''
+    """
     clf = RandomForestClassifier(n_jobs=-1, random_state=42, n_estimators=100)
     clf.fit(train_X, train_Y)
 
@@ -224,3 +239,35 @@ def train_and_predict_rf(train_X, train_Y, valid_X=None):
         "model": clf,
     }
     return results
+
+
+COLOR_LIST = ["#A5D7E8", "#576CBC", "#19376D", "#0b2447"]
+
+
+def plot_count_pairs(data_df, feature, title, hue="set"):
+    f, ax = plt.subplots(1, 1, figsize=(8, 4))
+    sns.countplot(x=feature, data=data_df, hue=hue, palette=COLOR_LIST)
+    plt.grid(color="black", linestyle="-.", linewidth=0.5, axis="y", which="major")
+    ax.set_title(f"Number of passengers / {title}")
+    f.savefig(
+        f"figures/Number of passengers, {title}, by {hue}.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.show()
+
+
+def plot_distribution_pairs(data_df, feature, title, hue="set"):
+    f, ax = plt.subplots(1, 1, figsize=(8, 4))
+    for i, h in enumerate(data_df[hue].unique()):
+        g = sns.histplot(
+            data_df.loc[data_df[hue] == h, feature], color=COLOR_LIST[i], ax=ax, label=h
+        )
+    ax.set_title(f"Number of passengers / {title}")
+    g.legend()
+    f.savefig(
+        f"figures/Number of passengers, {title}, by {hue}.png",
+        dpi=300,
+        bbox_inches="tight",
+    )
+    plt.show()

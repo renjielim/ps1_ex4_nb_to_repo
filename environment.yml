@@ -11,4 +11,5 @@ dependencies:
   - jupyter
   - pandas
   - wordcloud
+  - pre-commit
 prefix: /Users/limrenjie/miniconda3/envs/titanic

@@ -1,0 +1,39 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.python-version
+
+# Packaging artifacts
+*.egg-info/
+dist/
+build/
+
+# Testing and type checking caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+coverage.*
+.coverage
+htmlcov/
+
+# Jupyter notebook checkpoints and metadata
+.ipynb_checkpoints/
+
+# macOS Finder metadata
+.DS_Store
+
+# Editor settings
+.vscode/
+.idea/
+
+
